@@ -1,45 +1,79 @@
-import { VNode, Fragment, defineComponent, PropType, computed, provide, InjectionKey, reactive } from 'vue';
-import { NAME } from './constants';
+import { defineComponent, provide, ref, Ref, reactive, computed, toRefs } from 'vue';
+import { CONTEXT, cos, getRect, max, min, RAD, sin, useEvent } from './helper';
 
-interface Config {
-	radius: number;
-}
-
-interface Ctx {
+interface Props {
 	sum: number;
 	radius: number;
 }
 
-export const CONTEXT = Symbol() as InjectionKey<Ctx>;
+const useCalculateRotate = (props: Props, container: Ref<HTMLElement | undefined>) => {
+	const rotate = ref<number[]>(new Array(4).fill(0));
 
-const getItemLength = (vnode: VNode[]): number => {
-	let l = 0;
+	let mouseX = 0,
+		mouseY = 0;
 
-	for (const { type, children } of vnode) {
-		if (type === Fragment) l += getItemLength(children as VNode[]);
-		if ((type as any).name === NAME) l++;
-	}
+	const calRad = (n: number) => {
+		const r = props.radius;
+		const d = 2 * r;
 
-	return l;
+		return min(max(-n, -d), d) / r;
+	};
+
+	const calculate = () => {
+		const r1 = calRad(mouseX);
+		const r2 = -calRad(mouseY);
+
+		rotate.value = [sin(r2 * RAD), cos(r2 * RAD), sin(r1 * RAD), cos(r1 * RAD)];
+
+		next();
+	};
+
+	const next = () => requestAnimationFrame(calculate);
+
+	useEvent(window, 'mousemove', ({ clientX, clientY }: MouseEvent) => {
+		const { left, top, width, height } = getRect(container.value!);
+
+		mouseX = clientX - (left + width / 2);
+		mouseY = clientY - (top + height / 2);
+	});
+
+	next();
+
+	return rotate;
 };
 
 export default defineComponent({
 	props: {
-		config: { type: Object as PropType<Config>, default: () => ({ radius: 100 }) },
+		sum: {
+			type: Number,
+			required: true,
+		},
+		radius: {
+			type: Number,
+			default: 100,
+		},
 	},
 
 	setup(props, { slots }) {
-		const ctx = reactive({ sum: 0, radius: computed(() => props.config.radius) });
-		provide(CONTEXT, ctx);
+		const container = ref<HTMLElement>();
+		const rotate = useCalculateRotate(props, container);
 
-		return () => {
-			const children = slots.default?.();
+		provide(CONTEXT, reactive({ rotate, ...toRefs(props) }));
 
-			if (!children) return null;
+		const style = computed(() => {
+			const size = props.radius * 2 + 'px';
 
-			ctx.sum = getItemLength(children);
+			return {
+				width: size,
+				height: size,
+				position: 'relative' as const,
+			};
+		});
 
-			return children;
-		};
+		return () => (
+			<div class="wordle-container" style={style.value} ref={container}>
+				{slots.default?.()}
+			</div>
+		);
 	},
 });
