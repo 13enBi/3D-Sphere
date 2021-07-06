@@ -1,7 +1,7 @@
-import _Wordle from './Wordle';
-import WordleItem from './Item';
+import _Sphere from './Sphere';
+import SphereItem from './Item';
 
-const Wordle = ((_Wordle.Item = WordleItem), _Wordle) as typeof _Wordle & { Item: typeof WordleItem };
+const Sphere = ((_Sphere.Item = SphereItem), _Sphere) as typeof _Sphere & { Item: typeof SphereItem };
 
-export default Wordle;
-export { Wordle, WordleItem };
+export default Sphere;
+export { Sphere, SphereItem };

@@ -1,17 +1,23 @@
-import { createApp } from 'vue';
-import Wordle from './src';
+import { createApp, ref } from 'vue';
+import { use3dSphere } from './src/use3dSphere';
 
 createApp({
-	render() {
-		return (
+	setup() {
+		const data = ref(new Array(60).fill(<img src="./1.gif" style="width:40px;height:40px;"></img>));
+
+		const { render, pause, play } = use3dSphere(data, 200);
+
+		const push = () => data.value.push(<img src="./1.gif" style="width:40px;height:40px;"></img>);
+
+		return () => (
 			<div style="padding:200px">
-				<Wordle sum={30} radius={200}>
-					{new Array(30).fill(1).map((_, i) => (
-						<Wordle.Item index={i}>
-							<img src={`./${i + 1}.jpg`} style="width:40px;height:40px;border-radius:50%" />
-						</Wordle.Item>
-					))}
-				</Wordle>
+				<div style="margin-bottom:50px">
+					<button onClick={pause}>pause</button>
+					<button onClick={play}>play</button>
+					<button onClick={push}>push</button>
+				</div>
+
+				{render()}
 			</div>
 		);
 	},

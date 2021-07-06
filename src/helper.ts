@@ -1,9 +1,12 @@
 import { Ref, unref, onUnmounted, InjectionKey, onMounted } from 'vue';
 
+export type MaybeRef<T> = T | Ref<T>;
+
 export interface Ctx {
 	sum: number;
 	radius: number;
 	rotate: number[];
+	isPaused: boolean;
 }
 
 export const CONTEXT = Symbol() as InjectionKey<Ctx>;
